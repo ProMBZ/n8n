@@ -1,4 +1,4 @@
-import { TextDecoder } from 'node:util';
+import { isUtf8 } from 'node:buffer';
 
 import type { IExecuteFunctions } from 'n8n-workflow';
 import type { Readable } from 'stream';
@@ -6,18 +6,6 @@ import type { Readable } from 'stream';
 const CHINESE_ENCODINGS = ['gb18030', 'gbk', 'gb2312'] as const;
 const REPLACEMENT_CHAR = '�';
 const DEFAULT_ENCODING = 'utf-8';
-
-/**
- * A strict byte-level check distinguishes invalid UTF-8 from valid text containing U+FFFD.
- */
-function isValidUtf8(data: Buffer): boolean {
-	try {
-		new TextDecoder('utf-8', { fatal: true }).decode(data);
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 /**
  * Enhanced encoding detection for better handling of non-UTF-8 content
@@ -67,7 +55,9 @@ export async function binaryToStringWithEncodingDetection(
 
 	const decodedString = await helpers.binaryToString(bufferedData);
 
-	if (!isValidUtf8(bufferedData)) {
+	// Inspect the bytes rather than decoded code points: valid UTF-8 can contain
+	// both U+FFFD and consecutive Latin-1-range characters.
+	if (!isUtf8(bufferedData)) {
 		const detected = helpers.detectBinaryEncoding(bufferedData).toLowerCase() as BufferEncoding;
 		if (detected && detected !== DEFAULT_ENCODING) {
 			return await helpers.binaryToString(bufferedData, detected);
