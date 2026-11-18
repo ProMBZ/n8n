@@ -276,7 +276,10 @@ describe('buffer-decoding utils', () => {
 
 		describe('Error handling', () => {
 			it('should handle chardet returning null for Buffer', async () => {
-				const buffer = Buffer.concat([Buffer.from('test content with '), Buffer.from([0xff])]);
+				const buffer = Buffer.concat([
+					Buffer.from('test content with '),
+					Buffer.from([0xff]),
+				]);
 				const contentType = 'text/html';
 
 				mockBinaryToBuffer.mockResolvedValue(buffer);
@@ -290,7 +293,10 @@ describe('buffer-decoding utils', () => {
 			});
 
 			it('should handle chardet returning same encoding as default', async () => {
-				const buffer = Buffer.concat([Buffer.from('test content with '), Buffer.from([0xff])]);
+				const buffer = Buffer.concat([
+					Buffer.from('test content with '),
+					Buffer.from([0xff]),
+				]);
 				const contentType = 'text/html';
 
 				mockBinaryToBuffer.mockResolvedValue(buffer);
@@ -456,7 +462,7 @@ describe('buffer-decoding utils', () => {
 			});
 
 			it('should return result from specified encoding even if it contains replacement chars', async () => {
-				const buffer = Buffer.concat([Buffer.from('test content with '), Buffer.from([0xff])]);
+				const buffer = Buffer.from('test content with �', 'utf8');
 				const contentType = 'text/html; charset=iso-8859-1';
 
 				mockBinaryToString.mockResolvedValue('test content with �');
