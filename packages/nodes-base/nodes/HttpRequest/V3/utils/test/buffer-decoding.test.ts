@@ -149,9 +149,12 @@ describe('buffer-decoding utils', () => {
 			});
 		});
 
-		describe('Replacement character detection and re-encoding', () => {
+		describe('Invalid UTF-8 detection and re-encoding', () => {
 			it('should detect replacement characters and try chardet for Buffer', async () => {
-				const buffer = Buffer.concat([Buffer.from('test content with '), Buffer.from([0xff])]);
+				const buffer = Buffer.concat([
+					Buffer.from('test content with '),
+					Buffer.from([0xff]),
+				]);
 				const contentType = 'text/html';
 
 				mockBinaryToString
@@ -189,7 +192,10 @@ describe('buffer-decoding utils', () => {
 			});
 
 			it('should try Chinese encodings for Readable streams with replacement chars', async () => {
-				const buffer = Buffer.concat([Buffer.from('content with '), Buffer.from([0xff])]);
+				const buffer = Buffer.concat([
+					Buffer.from('content with '),
+					Buffer.from([0xff]),
+				]);
 				const readable = new Readable();
 				readable.push(buffer);
 				readable.push(null);
@@ -415,7 +421,10 @@ describe('buffer-decoding utils', () => {
 			});
 
 			it('should re-encode invalid UTF-8 bytes in mixed content', async () => {
-				const buffer = Buffer.concat([Buffer.from('test '), Buffer.from([0xff, 0x80, 0x81, 0x82])]);
+				const buffer = Buffer.concat([
+					Buffer.from('test '),
+					Buffer.from([0xff, 0x80, 0x81, 0x82]),
+				]);
 				const contentType = 'text/html';
 
 				mockBinaryToString
