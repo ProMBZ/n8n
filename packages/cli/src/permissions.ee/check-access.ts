@@ -90,6 +90,18 @@ export async function userHasScopes(
 		}
 	}
 
+	const credentialScopeRequest =
+		scopes.length > 0 && scopes.every((scope) => scope.startsWith('credential:'));
+	if (
+		credentialId &&
+		scopes.some((scope) => scope.startsWith('credential:')) &&
+		!credentialScopeRequest
+	) {
+		// This guard cannot compose credential and non-credential scopes. Deny
+		// mixed checks rather than letting a later resource branch ignore one.
+		return false;
+	}
+
 	if (globalOnly) return false;
 
 	// Find which projects the user has access to with the required scopes.
@@ -123,7 +135,7 @@ export async function userHasScopes(
 			? await roleService.rolesWithScope(namespace, scopes, loadRoles)
 			: await roleService.rolesWithScope(namespace, scopes);
 
-	if (credentialId) {
+	if (credentialId && credentialScopeRequest) {
 		const credentialRepo = entityManager
 			? entityManager.getRepository(SharedCredentials)
 			: Container.get(SharedCredentialsRepository);
