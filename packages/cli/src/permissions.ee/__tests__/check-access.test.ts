@@ -395,6 +395,41 @@ describe('userHasScopes', () => {
 		});
 	});
 
+	describe('credential URL parameters with other scope namespaces', () => {
+		it('keeps credential-scoped checks on the credential authorization path when agentId is present', async () => {
+			const credentialId = 'cred123';
+			roleServiceMock.mockResolvedValue(['credential:owner']);
+			findByCredentialMock.mockResolvedValue([
+				{ credentialsId: credentialId, projectId: 'projectId', role: 'credential:owner' },
+			]);
+
+			const user = { id: 'userId', scopes: [], role: GLOBAL_MEMBER_ROLE } as unknown as User;
+			const result = await userHasScopes(user, ['credential:read'], false, {
+				credentialId,
+				agentId: 'agent123',
+			});
+
+			expect(result).toBe(true);
+			expect(roleServiceMock).toHaveBeenCalledWith('credential', ['credential:read']);
+			expect(agentFindByIdMock).not.toHaveBeenCalled();
+		});
+
+		it('fails closed when a credential parameter is paired with mixed resource scopes', async () => {
+			const user = { id: 'userId', scopes: [], role: GLOBAL_MEMBER_ROLE } as unknown as User;
+			const result = await userHasScopes(
+				user,
+				['agent:update', 'credential:read'],
+				false,
+				{ credentialId: 'cred123', agentId: 'agent123' },
+			);
+
+			expect(result).toBe(false);
+			expect(findByCredentialMock).not.toHaveBeenCalled();
+			expect(agentFindByIdMock).not.toHaveBeenCalled();
+			expect(mockQueryBuilder.getRawMany).not.toHaveBeenCalled();
+		});
+	});
+
 	describe('namespace isolation', () => {
 		it('should use correct namespace for credential checks', async () => {
 			const credentialId = 'cred123';
