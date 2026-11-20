@@ -213,6 +213,34 @@ describe('userHasScopes', () => {
 			expect(result).toBe(true);
 		});
 
+		it('should check the agent scope when credentialId is also present', async () => {
+			agentFindByIdMock.mockResolvedValue(agent);
+
+			const user = { id: 'userId', scopes: [], role: GLOBAL_MEMBER_ROLE } as unknown as User;
+			const result = await userHasScopes(user, ['agent:update'], false, {
+				credentialId: 'credential123',
+				agentId: 'agent123',
+			});
+
+			expect(result).toBe(true);
+			expect(findByCredentialMock).not.toHaveBeenCalled();
+			expect(agentFindByIdMock).toHaveBeenCalledWith('agent123');
+		});
+
+		it('should deny the agent scope when its project differs, even if a credentialId is present', async () => {
+			agentFindByIdMock.mockResolvedValue({ ...agent, projectId: 'otherProjectId' });
+
+			const user = { id: 'userId', scopes: [], role: GLOBAL_MEMBER_ROLE } as unknown as User;
+			const result = await userHasScopes(user, ['agent:update'], false, {
+				credentialId: 'credential123',
+				agentId: 'agent123',
+			});
+
+			expect(result).toBe(false);
+			expect(findByCredentialMock).not.toHaveBeenCalled();
+			expect(agentFindByIdMock).toHaveBeenCalledWith('agent123');
+		});
+
 		it('should deny access when the agent belongs to another project', async () => {
 			agentFindByIdMock.mockResolvedValue({ ...agent, projectId: 'otherProjectId' });
 			mockQueryBuilder.getRawMany.mockResolvedValue([{ id: 'projectId' }]);
